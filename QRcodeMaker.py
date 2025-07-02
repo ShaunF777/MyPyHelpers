@@ -55,7 +55,7 @@ while True:
     draw.text((text_x, 5), text, fill="black", font=font)
 
     # Paste the QR code below the text
-    labeled_img.paste(img, (0, text_height + 10))
+    labeled_img.paste(img, (0, text_height + 10)) # 10px padding below the text
 
     # Save the QR code image with the specified name
     img_filename = f"{name}.png"
