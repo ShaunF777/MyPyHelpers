@@ -1,8 +1,9 @@
 import qrcode
+from PIL import Image, ImageDraw, ImageFont
 
 print ("QR Code Generator (type'exit' to quit)")
 
-while true:
+while True:
     # Ask user for output filename
     name = input("Enter name for QR code image without .png (or 'exit' to quit): ").strip()
 
@@ -27,9 +28,37 @@ while true:
     )
     qr.add_data(data) # Add data to the QR code
     qr.make(fit=True) # Generate the QR code  
-    img = qr.make_image(fill_color="black", back_color="white") # Create the QR code image 
+    img = qr.make_image(fill_color="black", back_color="white").convert('RGB') # Create the QR code image and convert to RGB
+    # Load default font (or use a custom font if desired)
+    try:
+        font = ImageFont.truetype("arial.ttf", size = 24) # Load a TrueType font
+    except:
+        font = ImageFont.load_default() # Fallback to default font
+
+    # Measure text size using textbbox (modern Pillow)
+    text = name
+    draw_temp = ImageDraw.Draw(img)  # Temporary draw object just for measuring
+    bbox = draw_temp.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+
+
+    # Create a new image with extra space for the text label
+    total_width = img.width
+    total_height = img.height + text_height + 10  # 10px padding
+
+    labeled_img = Image.new("RGB", (total_width, total_height), "white")
+
+    # Draw the text on the new image
+    draw = ImageDraw.Draw(labeled_img)
+    text_x = (total_width - text_width) // 2
+    draw.text((text_x, 5), text, fill="black", font=font)
+
+    # Paste the QR code below the text
+    labeled_img.paste(img, (0, text_height + 10))
+
     # Save the QR code image with the specified name
     img_filename = f"{name}.png"
     # Save the image to the specified filename
-    img.save(img_filename)
+    labeled_img.save(img_filename)
     print(f"QR code saved as {img_filename}")
