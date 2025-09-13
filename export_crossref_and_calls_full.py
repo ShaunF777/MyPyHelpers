@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # export_crossref_and_calls_full.py
 # Exports:
 #  1) Cross reference CSV (if API available)
@@ -8,10 +9,10 @@
 
 # Exporting cross reference and a full POU call graph including FBD/CFC
 '''
-You’ll get two outputs in one run, dropped into an Exports folder beside your .project:
+Youll get two outputs in one run, dropped into an Exports folder beside your .project:
 - cross_reference.csv
 - pou_call_graph.csv (plus a call_graph.mmd Mermaid file you can render anywhere)
-I’ve also made it generic: it auto-detects your project’s folder and looks for a PLCopen XML export there. Since many of your POUs are FBD/CFC, 
+Ive also made it generic: it auto-detects your projects folder and looks for a PLCopen XML export there. Since many of your POUs are FBD/CFC, 
 the script parses that XML to capture calls from graphical logic as well as ST.
 
 What you can do with the call graph
@@ -21,14 +22,14 @@ What you can do with the call graph
 - Feed it into Mermaid to produce shareable diagrams for your team.
 
 How it works
-- Cross reference: uses the IDE’s scripting API. If your SP build does not expose the cross reference programmatically, the script will skip it 
+- Cross reference: uses the IDEs scripting API. If your SP build does not expose the cross reference programmatically, the script will skip it 
 gracefully (you can still paste-export it manually).
-- Call graph: parses a PLCopen XML export for both ST and FBD/CFC bodies. For FBD/CFC, it reads each block’s typeName as a callee. For ST, it detects textual calls.
+- Call graph: parses a PLCopen XML export for both ST and FBD/CFC bodies. For FBD/CFC, it reads each blocks typeName as a callee. For ST, it detects textual calls.
 Tip: Place your PLCopen XML export in the project folder (or Exports). The script will auto-pick the newest .xml there. You can also hard-set a path at the top.
 
 IronPython quick note
 IronPython is Python running on .NET inside CODESYS. It can inspect and automate the open project from Tools → Scripting. 
-Comments and commented-out code are ignored by cross reference and won’t pollute results.
+Comments and commented-out code are ignored by cross reference and wont pollute results.
 
 '''
 import os, re, csv, sys, time
@@ -132,8 +133,9 @@ crossref_csv = os.path.join(export_dir, "cross_reference.csv")
 crossref_ok = False
 try:
     cross_ref = proj.get_cross_reference()
-    with open(crossref_csv, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+    import codecs
+    with codecs.open(crossref_csv, "w", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["Variable", "Location", "Type", "Access", "POU", "Line"])
         for e in cross_ref:
             # Some builds expose different attribute names; try safely
@@ -212,8 +214,9 @@ for pn in pou_nodes:
 
 # Write CSV
 callgraph_csv = os.path.join(export_dir, "pou_call_graph.csv")
-with open(callgraph_csv, "w", newline="", encoding="utf-8") as f:
-    w = csv.writer(f)
+import codecs
+with codecs.open(callgraph_csv, "w", encoding="utf-8") as f:
+    w = csv.writer(f, lineterminator="\n")
     w.writerow(["Caller", "Callee"])
     for a, b in sorted(edges):
         w.writerow([a, b])
@@ -222,7 +225,8 @@ print("POU call graph exported:", callgraph_csv)
 
 # Also write Mermaid
 mermaid_path = os.path.join(export_dir, "call_graph.mmd")
-with open(mermaid_path, "w", encoding="utf-8") as f:
+import codecs
+with codecs.open(mermaid_path, "w", encoding="utf-8") as f:
     f.write("graph TD\n")
     for a, b in sorted(edges):
         f.write("    %s --> %s\n" % (sanitize_identifier(a), sanitize_identifier(b)))
