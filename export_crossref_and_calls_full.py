@@ -11,7 +11,8 @@
 You’ll get two outputs in one run, dropped into an Exports folder beside your .project:
 - cross_reference.csv
 - pou_call_graph.csv (plus a call_graph.mmd Mermaid file you can render anywhere)
-I’ve also made it generic: it auto-detects your project’s folder and looks for a PLCopen XML export there. Since many of your POUs are FBD/CFC, the script parses that XML to capture calls from graphical logic as well as ST.
+I’ve also made it generic: it auto-detects your project’s folder and looks for a PLCopen XML export there. Since many of your POUs are FBD/CFC, 
+the script parses that XML to capture calls from graphical logic as well as ST.
 
 What you can do with the call graph
 - See who-calls-who across Programs, FBs, and Functions.
@@ -20,12 +21,14 @@ What you can do with the call graph
 - Feed it into Mermaid to produce shareable diagrams for your team.
 
 How it works
-- Cross reference: uses the IDE’s scripting API. If your SP build does not expose the cross reference programmatically, the script will skip it gracefully (you can still paste-export it manually).
+- Cross reference: uses the IDE’s scripting API. If your SP build does not expose the cross reference programmatically, the script will skip it 
+gracefully (you can still paste-export it manually).
 - Call graph: parses a PLCopen XML export for both ST and FBD/CFC bodies. For FBD/CFC, it reads each block’s typeName as a callee. For ST, it detects textual calls.
 Tip: Place your PLCopen XML export in the project folder (or Exports). The script will auto-pick the newest .xml there. You can also hard-set a path at the top.
 
 IronPython quick note
-IronPython is Python running on .NET inside CODESYS. It can inspect and automate the open project from Tools → Scripting. Comments and commented-out code are ignored by cross reference and won’t pollute results.
+IronPython is Python running on .NET inside CODESYS. It can inspect and automate the open project from Tools → Scripting. 
+Comments and commented-out code are ignored by cross reference and won’t pollute results.
 
 '''
 import os, re, csv, sys, time
@@ -228,3 +231,11 @@ print("Mermaid call graph exported:", mermaid_path)
 
 print("All done. Outputs are in:", export_dir)
 
+#Usage notes
+'''
+- Before running: export your project to PLCopen XML and drop it in either:
+- C:\02. CODESYS 3.5 Packages\2025.09.10 HCM System\
+- C:\02. CODESYS 3.5 Packages\2025.09.10 HCM System\Exports
+The script automatically picks the newest .xml there.
+- If you prefer, hard-set PLCOPEN_XML_HINT at the top of the script to the exact file path.
+'''
