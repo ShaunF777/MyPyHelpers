@@ -76,8 +76,9 @@ def read_xml(path):
 def ns_manager(doc):
     # PLCopen namespaces commonly used
     nsm = XmlNamespaceManager(doc.NameTable)
-    # Main PLCopen TC6 namespace
-    nsm.AddNamespace("plc", "http://www.plcopen.org/xml/tc6_0201") # Prefix 'plc' maps to PLCopen namespace
+     # Detect the default namespace from the root element
+    root_ns = doc.DocumentElement.NamespaceURI
+    nsm.AddNamespace("plc", root_ns) # Prefix 'plc' maps to PLCopen root namespace as per .xml file
     # Sometimes ST bodies are wrapped in XHTML
     nsm.AddNamespace("xhtml", "http://www.w3.org/1999/xhtml") # Prefix 'xhtml' maps to XHTML namespace
     return nsm
@@ -174,10 +175,10 @@ doc = read_xml(xml_path)
 nsm = ns_manager(doc)
 
 # Gather POU names
-pou_nodes = doc.SelectNodes("//plc:project/plc:types/plc:pous/plc:pou", nsm)
+pou_nodes = doc.SelectNodes("//plc:pou", nsm)
 if pou_nodes is None or pou_nodes.Count == 0:
     # Some exports nest differently; try a more general lookup
-    pou_nodes = doc.SelectNodes("//plc:pou", nsm)
+    pou_nodes = doc.SelectNodes("//pou")
 
 pou_names = set()
 for pn in pou_nodes:
@@ -194,6 +195,9 @@ for pn in pou_nodes:
 
     # ST bodies
     st_nodes = pn.SelectNodes(".//plc:ST", nsm)
+    if st_nodes is None or st_nodes.Count == 0: # for robustness, change the POU node lookup
+        st_nodes = pn.SelectNodes(".//ST")
+
     for st in st_nodes or []:
         # ST may embed XHTML. Gather all text
         st_text = st.InnerText or ""
@@ -206,6 +210,9 @@ for pn in pou_nodes:
     # FBD/CFC bodies
     for lang in ("FBD", "CFC"):
         body_nodes = pn.SelectNodes(".//plc:%s" % lang, nsm)
+        if body_nodes is None or body_nodes.Count == 0: # for robustness, change the POU node lookup
+            body_nodes = pn.SelectNodes(".//%s" % lang)
+
         for body in body_nodes or []:
             callees = detect_calls_in_fbd(body, nsm)
             for c in callees:
