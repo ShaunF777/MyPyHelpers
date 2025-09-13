@@ -76,9 +76,9 @@ def ns_manager(doc):
     # PLCopen namespaces commonly used
     nsm = XmlNamespaceManager(doc.NameTable)
     # Main PLCopen TC6 namespace
-    nsm.AddNamespace("plc", "http://www.plcopen.org/xml/tc6_0201")
+    nsm.AddNamespace("plc", "http://www.plcopen.org/xml/tc6_0201") # Prefix 'plc' maps to PLCopen namespace
     # Sometimes ST bodies are wrapped in XHTML
-    nsm.AddNamespace("xhtml", "http://www.w3.org/1999/xhtml")
+    nsm.AddNamespace("xhtml", "http://www.w3.org/1999/xhtml") # Prefix 'xhtml' maps to XHTML namespace
     return nsm
 
 def sanitize_identifier(s):
