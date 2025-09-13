@@ -69,3 +69,22 @@ with open(callgraph_path, mode="w", newline="", encoding="utf-8") as f:
 print("POU call graph exported to:", callgraph_path)
 
 print("All exports complete. Files are in:", export_dir)
+
+#💡 What You’ll Be Able to Do With the Call Graph
+'''
+The POU Call Graph is basically a map of execution relationships:
+• 	Nodes = POUs (Programs, Function Blocks, Functions)
+• 	Edges = “POU A calls POU B”
+• 	Lets you:
+• 	See the top‑level execution order (Tasks → Programs → FBs → Functions)
+• 	Identify dead code (POUs never called)
+• 	Spot deep call chains that might be performance hotspots
+• 	Feed it into Mermaid.js or Graphviz to get a visual diagram
+'''
+
+# 🛠 How This Works 
+'''
+• 	 → gives the full path to the  file
+• 	 → built‑in CODESYS API for variable usage
+• 	 → returns all POUs in the project
+• 	Simple string search in  → finds calls to other POUs (works well for ST; for FBD/CFC, we’d parse the PLCopen XML if you want 100% accuracy)'''
