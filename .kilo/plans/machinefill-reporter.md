@@ -9,6 +9,10 @@ A Python desktop application that processes oil transaction CSV files and genera
 - Liters may be suffixed with "Ltr" (e.g., "499.45Ltr") or raw floats (e.g., "499.45")
 - Name column may be empty; use Coynumber as fallback for Attendant display
 
+## Developer Note: Layout Refinement Strategy
+- The most efficient way to fine-tune the PDF output is to MANUALY adjust the fractional coordinates 
+(e.g., moving headings or banners by 0.01 increments) and test the visual layout changes iteratively.
+
 ## Phase 1: Core Data Processing ✅ COMPLETED
 
 ### 1.1 Environment Setup
@@ -105,6 +109,15 @@ Fixed color mapping (Phase 4 GUI will allow overrides):
 ### 3.2 Execution Flow
 - HTML generation completes first
 - PDF compilation triggers automatically immediately after successful HTML generation
+
+### 3.3 Layout Coordinate & Geometry Standards
+- Figure Setup: Use fig, ax = plt.subplots(figsize=(6.2, 4.8)) to establish a consistent rectangular page shape
+- Pie Chart Geometry: Set radius=0.95 to balance slice visibility with label spacing, and use startangle=135 so the   primary slice begins at the top-left
+- Coordinate Logic: All layout arguments for add_axes and fig.text (e.g., [left, bottom, width, height]) are fractions of the total Figure size (0.0 to 1.0).
+- Page 1 Banner: Implement the dark top banner at [0.0, 0.87, 1.0, 0.12]. Explicitly disable ticks/spines on this axes to ensure a clean background
+- Header Text Positioning: Place the Report Title at (0.35, 0.95) and the Date Range at (0.35, 0.91) using fractional coordinates.
+- Conditional Image Placement: Position chart images at [0.02, 0.26, 0.54, 0.66] on Page 1, shifting the "bottom" to 0.38 on subsequent pages to account for the missing banner
+
 
 ## Phase 4: GUI Evolution ⏳ PENDING
 
