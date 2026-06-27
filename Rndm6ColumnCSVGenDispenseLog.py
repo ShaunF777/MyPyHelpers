@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timedelta
 
 # === CONFIG ===
-filename = "NavOilBay_mock.csv"
+filename = "OilBay_mock.csv"
 GenerateQTY = 200   # change this to any number of rows you want
 begin_dt = datetime(2026, 5, 10, 6, 0)   # start date/time
 end_dt   = datetime(2026, 6, 11, 20, 0)  # end date/time

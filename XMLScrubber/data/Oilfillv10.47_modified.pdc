@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" uuid="339d5f45-6168-44a2-bb40-d1af8ce8a119" customerVersion="00.00.09" keyPrefix="auto.generated" xmlns="http://xml.proemion.com/ProemionDataConfiguration/2012/07" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <Name xsi:type="MessageDefinition">
+    <Label lang="en" value="IOT_Oil_Monitoring_Setup" />
+  </Name>
+  <Description xsi:type="MessageDefinition">
+    <Label lang="en" value="IOT_Oil_Monitoring_Setup" />
+  </Description>
+  <GlobalDictionary>
+    <Message key="label.value.common.machine.geo.altitude">
+      <Label lang="en" value="Geo altitude" />
+      <Label lang="de" value="Geo-Höhe" />
+    </Message>
+    <Message key="label.value.common.machine.geo.heading">
+      <Label lang="en" value="Geo heading" />
+      <Label lang="de" value="Geo-Kurs" />
+    </Message>
+    <Message key="label.value.common.machine.geo.latitude">
+      <Label lang="en" value="Geo latitude" />
+      <Label lang="de" value="Geo-Breitengrad" />
+    </Message>
+    <Message key="label.value.common.machine.geo.longitude">
+      <Label lang="en" value="Geo longitude" />
+      <Label lang="de" value="Geo-Längengrad" />
+    </Message>
+    <Message key="label.value.common.machine.geo.speed">
+      <Label lang="en" value="Geo speed" />
+      <Label lang="de" value="Geo-Geschwindigkeit" />
+    </Message>
+  </GlobalDictionary>
+  <xi:include href="http://xml.proemion.com/ProemionDataConfiguration/predefinedUnits.xml" parse="xml" xpointer="element(/1)" /><J1939><xi:include href="http://xml.proemion.com/ProemionDataConfiguration/J1939_201603_SpnLabels.xml" /></J1939>
+  <Units>
+    <Unit key="unit.volume_in_liter">
+      <symbol xsi:type="MessageDefinition">
+        <Label lang="en" value="L" />
+      </symbol>
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="volume in liter" />
+      </description>
+      <storeType xsi:type="NumericValueStoreType" />
+    </Unit>
+    <Unit key="unit.no_symbol_unit">
+      <symbol xsi:type="MessageDefinition">
+        <Label lang="en" value="" />
+      </symbol>
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="unit without symbol" />
+      </description>
+      <storeType xsi:type="NumericValueStoreType" />
+    </Unit>
+    <Unit key="unit.voltage">
+      <symbol xsi:type="MessageDefinition">
+        <Label lang="en" value="V" />
+      </symbol>
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="voltage" />
+      </description>
+      <storeType xsi:type="NumericValueStoreType" />
+    </Unit>
+  </Units>
+  <ValueDefinitions>
+    <ValueDefinition key="valdef.c9de36fc-73a3-4141-80b3-63f374d01448">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="68HYD Liters Dispensed " />
+      </description>
+      <unit>unit.volume_in_liter</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.7318e781-06d3-4da3-a0fa-92e688eb70d2">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="15W40 Liters Dispensed " />
+      </description>
+      <unit>unit.volume_in_liter</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.05f0e695-1101-4c4e-a674-65e60c6a5dba">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="ACX30 Liters Dispensed" />
+      </description>
+      <unit>unit.volume_in_liter</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.9279baff-3e08-4b93-acf4-a962562bf91c">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="85W140 Liters Dispensed " />
+      </description>
+      <unit>unit.volume_in_liter</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.0ea7c991-afd8-45e0-ad75-0db2f76fb770">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="68HYD User Tag" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.edfdf699-f7a2-4b4e-a5a3-1a85df13d9d1">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="15W40 User Tag" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.b145491c-6196-4565-8445-65f4a152668b">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="ACX30 User Tag" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.743b67cc-0a70-4921-a6fb-0d48fa67092a">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="85W140 User Tag" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.4e5d79c4-d375-4c4e-951b-8197a62ccc62">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="68HYD Fleet Number" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.8220cb61-f4d1-4c5a-929a-fa4f66a0c18a">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="15W40 Fleet Number" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.7f16ada5-22b0-4170-b8d6-fabfe31c36fb">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="ACX30 Fleet Number" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.33b4cb5a-5a87-4c2b-a30b-53e859e6a908">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="85W140 Fleet Number" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.21c0d8c8-d271-470d-8ffa-d77677b1ec01">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="68HYD Fleet Type" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.c7cac14e-450b-4864-b47e-6c95a6e3c648">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="15W40 Fleet Type" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.cfff2550-e2c3-4002-853f-63223ff4f560">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="ACX30 Fleet Type" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.aaa187a3-dc9f-45cd-96e2-d63c70d4c001">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="85W140 Fleet Type" />
+      </description>
+      <unit>unit.no_symbol_unit</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.772cc014-f255-4b02-8f56-6c710580faf9">
+      <description xsi:type="MessageDefinition">
+        <Label lang="en" value="Screen Voltage" />
+      </description>
+      <unit>unit.voltage</unit>
+      <format>%.0f</format>
+    </ValueDefinition>
+    <ValueDefinition key="valdef.FleetType_Full" managedByDataPlatform="false">
+      <description xsi:type="MessageReference" value="label.FleetType_Full"/>
+      <unit>predefined.unit.TEXT</unit>
+    </ValueDefinition>    
+    <ValueDefinition key="value.common.machine.geo.altitude">
+      <description xsi:type="MessageReference" value="label.value.common.machine.geo.altitude" />
+      <unit>predefined.unit.length.METER</unit>
+    </ValueDefinition>
+    <ValueDefinition key="value.common.machine.geo.heading">
+      <description xsi:type="MessageReference" value="label.value.common.machine.geo.heading" />
+      <unit>predefined.unit.geoposition.DECIMAL_DEGREE</unit>
+    </ValueDefinition>
+    <ValueDefinition key="value.common.machine.geo.latitude">
+      <description xsi:type="MessageReference" value="label.value.common.machine.geo.latitude" />
+      <unit>predefined.unit.geoposition.DECIMAL_DEGREE</unit>
+    </ValueDefinition>
+    <ValueDefinition key="value.common.machine.geo.longitude">
+      <description xsi:type="MessageReference" value="label.value.common.machine.geo.longitude" />
+      <unit>predefined.unit.geoposition.DECIMAL_DEGREE</unit>
+    </ValueDefinition>
+    <ValueDefinition key="value.common.machine.geo.speed">
+      <description xsi:type="MessageReference" value="label.value.common.machine.geo.speed" />
+      <unit>predefined.unit.speed.KILOMETERS_PER_HOUR</unit>
+    </ValueDefinition>
+  </ValueDefinitions>
+  <ParsingDefinition>
+    <BinaryStreamDefinition src="CAN">
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x64">
+        <Values>
+          <FloatValue startPos="0" endianness="LITTLE" length="32" signed="true">
+            <valueDefinition ref="valdef.c9de36fc-73a3-4141-80b3-63f374d01448" />
+          </FloatValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x65">
+        <Values>
+          <FloatValue startPos="0" endianness="LITTLE" length="32" signed="true">
+            <valueDefinition ref="valdef.7318e781-06d3-4da3-a0fa-92e688eb70d2" />
+          </FloatValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x66">
+        <Values>
+          <FloatValue startPos="0" endianness="LITTLE" length="32" signed="true">
+            <valueDefinition ref="valdef.05f0e695-1101-4c4e-a674-65e60c6a5dba" />
+          </FloatValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x67">
+        <Values>
+          <FloatValue startPos="0" endianness="LITTLE" length="32" signed="true">
+            <valueDefinition ref="valdef.9279baff-3e08-4b93-acf4-a962562bf91c" />
+          </FloatValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x68">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="32">
+            <valueDefinition ref="valdef.0ea7c991-afd8-45e0-ad75-0db2f76fb770" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x69">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="32">
+            <valueDefinition ref="valdef.edfdf699-f7a2-4b4e-a5a3-1a85df13d9d1" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x6A">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="32">
+            <valueDefinition ref="valdef.b145491c-6196-4565-8445-65f4a152668b" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x6B">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="32">
+            <valueDefinition ref="valdef.743b67cc-0a70-4921-a6fb-0d48fa67092a" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x6C">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="16">
+            <valueDefinition ref="valdef.4e5d79c4-d375-4c4e-951b-8197a62ccc62" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x6D">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="16">
+            <valueDefinition ref="valdef.8220cb61-f4d1-4c5a-929a-fa4f66a0c18a" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x6E">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="16">
+            <valueDefinition ref="valdef.7f16ada5-22b0-4170-b8d6-fabfe31c36fb" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x6F">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="16">
+            <valueDefinition ref="valdef.33b4cb5a-5a87-4c2b-a30b-53e859e6a908" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x70">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="8">
+            <valueDefinition ref="valdef.21c0d8c8-d271-470d-8ffa-d77677b1ec01" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x71">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="8">
+            <valueDefinition ref="valdef.c7cac14e-450b-4864-b47e-6c95a6e3c648" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x72">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="8">
+            <valueDefinition ref="valdef.cfff2550-e2c3-4002-853f-63223ff4f560" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x73">
+        <Values>
+          <IntValue startPos="0" endianness="LITTLE" length="8">
+            <valueDefinition ref="valdef.aaa187a3-dc9f-45cd-96e2-d63c70d4c001" />
+          </IntValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x74">
+        <Values>
+          <FloatValue startPos="0" endianness="LITTLE" length="32" signed="true">
+            <valueDefinition ref="valdef.772cc014-f255-4b02-8f56-6c710580faf9" />
+          </FloatValue>
+        </Values>
+      </CanMessage>
+      <CanMessage protocolStyle="GENERIC" mask="0x7ff" canIdLength="29" canId="0x75">
+        <Values>
+          <SimpleCharValue startPos="0" charset="US-ASCII" continueOnLastPostion="false">
+            <valueDefinition ref="valdef.FleetType_Full"/>
+            <length type="CHAR" value="8"/>
+          </SimpleCharValue>
+        </Values>
+      </CanMessage>    
+    </BinaryStreamDefinition>
+  </ParsingDefinition>
+</DataConfig>

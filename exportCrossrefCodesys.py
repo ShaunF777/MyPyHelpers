@@ -1,5 +1,5 @@
 # exportCrossrefCodesys.py
-# Dumps Cross Reference and POU Call Graph to CSV files in a subfolder of the current project.
+# Dumps Cross Reference and POU Call Graph to CSV files in a subfolder of he current project.t
 # Run inside CODESYS: Tools → Scripting → Execute Script File...
 
 import csv
