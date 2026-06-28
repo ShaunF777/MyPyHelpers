@@ -3,12 +3,37 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from pathlib import Path
 from typing import Dict, Optional
+import sys
+import json
+import tempfile
+from datetime import date, timedelta
 
-DATA_PATH = Path(__file__).parent.parent / "data" / "IFS_KTK025_log_2026.06.22.csv"
-ASSETS_DIR = Path(__file__).parent.parent / "assets"
-REPORTS_DIR = Path(__file__).parent.parent / "reports"
+def get_base_path() -> Path:
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent.parent
 
-OIL_COLORS = {
+def get_output_path() -> Path:
+    if getattr(sys, 'frozen', False):
+        return Path.cwd()
+    return Path(__file__).parent.parent
+
+def get_appdata_path() -> Path:
+    appdata = Path.home() / "AppData" / "Local" / "MachineFillReporter"
+    appdata.mkdir(parents=True, exist_ok=True)
+    return appdata
+
+BASE_PATH = get_base_path()
+OUTPUT_PATH = get_output_path()
+APPDATA_PATH = get_appdata_path()
+DATA_PATH = BASE_PATH / "data" / "NavOilBay_mock.csv"
+ASSETS_DIR = OUTPUT_PATH / "assets"
+REPORTS_DIR = OUTPUT_PATH / "Machinefill-Reports"
+CHARTS_TEMP_DIR = Path(tempfile.gettempdir()) / "MachineFillReporter" / "charts"
+CHARTS_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+SETTINGS_FILE = APPDATA_PATH / "machinefill_settings.json"
+
+DEFAULT_OIL_COLORS = {
     "ACX30": "#1f77b4",
     "15W40": "#ff7f0e",
     "68HYD": "#2ca02c",
@@ -16,8 +41,42 @@ OIL_COLORS = {
 }
 DEFAULT_COLOR = "#7f7f7f"
 
-START_DATE: Optional[str] = "2026-06-15"
-END_DATE: Optional[str] = "2026-06-22"
+def load_settings() -> Dict:
+    if SETTINGS_FILE.exists():
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            pass
+    return {"colors": dict(DEFAULT_OIL_COLORS), "logo_path": None}
+
+def save_settings(settings: Dict) -> None:
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def load_colors() -> Dict[str, str]:
+    return load_settings().get("colors", dict(DEFAULT_OIL_COLORS))
+
+def save_colors(colors: Dict[str, str]) -> None:
+    settings = load_settings()
+    settings["colors"] = colors
+    save_settings(settings)
+
+def load_logo_path() -> Optional[Path]:
+    logo_path = load_settings().get("logo_path")
+    if logo_path and Path(logo_path).exists():
+        return Path(logo_path)
+    return None
+
+def save_logo_path(path: str) -> None:
+    settings = load_settings()
+    settings["logo_path"] = path
+    save_settings(settings)
+
+OIL_COLORS = load_colors()
+
+START_DATE: Optional[str] = None
+END_DATE: Optional[str] = None
 
 
 def parse_liters(value) -> float:
@@ -71,7 +130,7 @@ def print_transaction_summary(df: pd.DataFrame) -> None:
         print(f"  {row['FleetNumber']}: {row['Total Transactions']}")
 
 
-def generate_pie_chart(machine_df: pd.DataFrame, fleet_number: str, output_dir: Path = ASSETS_DIR) -> Path:
+def generate_pie_chart(machine_df: pd.DataFrame, fleet_number: str, output_dir: Path = CHARTS_TEMP_DIR) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     
     oil_totals = machine_df.groupby("Oil Type")["Liters"].sum()
@@ -211,7 +270,7 @@ def export_to_pdf(machine_groups: Dict[str, pd.DataFrame], output_path: Path, mi
                     ax_banner.tick_params(bottom=False, left=False, labelbottom=False, labelleft=False)
                     for spine in ax_banner.spines.values():
                         spine.set_visible(False)
-                    logo_path = ASSETS_DIR / "Thungela logo.png"
+                    logo_path = load_logo_path() or (BASE_PATH / "assets" / "Thungela logo.png")
                     if logo_path.exists():      #Argument list [left, bottom, width, height]
                         ax_logo = fig.add_axes([0.02, 0.89, 0.18, 0.07])
                         img = plt.imread(logo_path)
@@ -227,7 +286,7 @@ def export_to_pdf(machine_groups: Dict[str, pd.DataFrame], output_path: Path, mi
                 total_liters = oil_totals.sum()
                 percentages = (oil_totals / total_liters * 100).round(1)
                 
-                chart_path = ASSETS_DIR / f"chart_{fleet_number}.png"
+                chart_path = CHARTS_TEMP_DIR / f"chart_{fleet_number}.png"
                 if chart_path.exists():
                     #Argument list [left, bottom, width, height]fractions of the Figure size (range 0.0 to 1.0)
                     ax_img = fig.add_axes([0.02, 0.26 if page_idx == 0 else 0.38, 0.54, 0.66])
@@ -276,17 +335,189 @@ def export_to_pdf(machine_groups: Dict[str, pd.DataFrame], output_path: Path, mi
 
 
 if __name__ == "__main__":
-    df = load_and_sort_data()
-    print_transaction_summary(df)
-    machine_groups = get_machine_groups(df)
-    
-    all_timestamps = pd.concat([group["Timestamp"] for group in machine_groups.values()])
-    min_date = all_timestamps.min().strftime("%Y-%m-%d %H:%M")
-    max_date = all_timestamps.max().strftime("%Y-%m-%d %H:%M")
-    
-    report_path = generate_html_report(machine_groups, min_date=min_date, max_date=max_date)
-    print(f"\nHTML Report generated: {report_path}")
-    
-    pdf_path = REPORTS_DIR / "machine_consumption_summary.pdf"
-    pdf_path = export_to_pdf(machine_groups, pdf_path, min_date=min_date, max_date=max_date)
-    print(f"PDF Report generated: {pdf_path}")
+    import tkinter as tk
+    from tkinter import ttk, filedialog, messagebox
+    from tkcalendar import DateEntry
+
+    class MachineFillGUI:
+        def __init__(self, root):
+            self.root = root
+            self.root.title("MachineFill Reporter")
+            self.root.geometry("560x540")
+            self.root.resizable(False, False)
+
+            self.csv_path = tk.StringVar(value=str(OUTPUT_PATH))
+            self.logo_path = tk.StringVar(value="")
+            self.status_text = tk.StringVar(value="Ready")
+
+            self.oil_colors = load_colors()
+            self.color_vars = {}
+            self.color_buttons = {}
+            for key, val in self.oil_colors.items():
+                self.color_vars[key] = tk.StringVar(value=val)
+
+            today = date.today()
+            self.default_start = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+            self.default_end = today.strftime("%Y-%m-%d")
+
+            self._build_ui()
+
+        def _build_ui(self):
+            pad = {"padx": 10, "pady": 4}
+
+            file_frame = ttk.LabelFrame(self.root, text="Step 1. Select .csv file")
+            file_frame.pack(fill="x", **pad)
+
+            ttk.Entry(file_frame, textvariable=self.csv_path, width=50).pack(side="left", padx=(10, 4), pady=6)
+            ttk.Button(file_frame, text="Browse", command=self.browse_csv).pack(side="left", padx=(0, 10), pady=6)
+
+            logo_frame = ttk.LabelFrame(self.root, text="Step 2. Select Company Logo")
+            logo_frame.pack(fill="x", **pad)
+
+            ttk.Entry(logo_frame, textvariable=self.logo_path, width=50).pack(side="left", padx=(10, 4), pady=6)
+            ttk.Button(logo_frame, text="Browse", command=self.browse_logo).pack(side="left", padx=(0, 10), pady=6)
+
+            date_frame = ttk.LabelFrame(self.root, text="Step 3. Customise report dates")
+            date_frame.pack(fill="x", **pad)
+
+            ttk.Label(date_frame, text="Begin Date:").pack(side="left", padx=(10, 4))
+            self.start_cal = DateEntry(date_frame, width=12, date_pattern="yyyy-mm-dd")
+            self.start_cal.pack(side="left", padx=(0, 16))
+            self.start_cal.set_date(self.default_start)
+
+            ttk.Label(date_frame, text="End Date:").pack(side="left", padx=(0, 4))
+            self.end_cal = DateEntry(date_frame, width=12, date_pattern="yyyy-mm-dd")
+            self.end_cal.pack(side="left")
+            self.end_cal.set_date(self.default_end)
+
+            ttk.Button(date_frame, text="Clear Dates", command=self.clear_dates).pack(side="left", padx=(16, 0))
+
+            color_frame = ttk.LabelFrame(self.root, text="Step 4. Change colors")
+            color_frame.pack(fill="x", **pad)
+
+            for i, (key, var) in enumerate(self.color_vars.items()):
+                ttk.Label(color_frame, text=key + ":").grid(row=0, column=i * 2, padx=(8, 2), pady=4)
+                color_btn = tk.Button(color_frame, textvariable=var, bg=var.get(), width=8,
+                                      command=lambda k=key: self.pick_color(k))
+                color_btn.grid(row=0, column=i * 2 + 1, padx=(0, 8), pady=4)
+                self.color_buttons[key] = color_btn
+
+            action_frame = ttk.Frame(self.root)
+            action_frame.pack(fill="x", **pad)
+
+            ttk.Button(action_frame, text="Generate Report", command=self.generate_reports).pack(side="left", padx=(10, 6))
+            ttk.Button(action_frame, text="Open Output Folder", command=self.open_output_folder).pack(side="left", padx=6)
+
+            status_frame = ttk.LabelFrame(self.root, text="Status")
+            status_frame.pack(fill="both", expand=True, **pad)
+
+            self.status_display = tk.Text(status_frame, height=8, width=62, state="disabled", wrap="word")
+            self.status_display.pack(padx=4, pady=4)
+
+        def log(self, message):
+            self.status_display.config(state="normal")
+            self.status_display.insert("end", message + "\n")
+            self.status_display.see("end")
+            self.status_display.config(state="disabled")
+            self.root.update_idletasks()
+
+        def browse_csv(self):
+            path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+            if path:
+                self.csv_path.set(path)
+                self._detect_csv_dates(path)
+
+        def _detect_csv_dates(self, path):
+            try:
+                df = pd.read_csv(path, usecols=["TimeStamp"])
+                df["TimeStamp"] = pd.to_datetime(df["TimeStamp"])
+                if not df.empty:
+                    min_ts = df["TimeStamp"].min()
+                    max_ts = df["TimeStamp"].max()
+                    self.start_cal.set_date(min_ts)
+                    self.end_cal.set_date(max_ts)
+                    self.log(f"CSV date range: {min_ts.strftime('%Y-%m-%d')} to {max_ts.strftime('%Y-%m-%d')}")
+            except Exception as e:
+                self.log(f"Could not detect CSV dates: {e}")
+
+        def browse_logo(self):
+            path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")])
+            if path:
+                self.logo_path.set(path)
+                save_logo_path(path)
+                self.log(f"Logo set: {path}")
+
+        def clear_dates(self):
+            self.start_cal.set_date(self.default_start)
+            self.end_cal.set_date(self.default_end)
+
+        def pick_color(self, key):
+            from tkinter import colorchooser
+            current = self.color_vars[key].get()
+            result = colorchooser.askcolor(initialcolor=current, title=f"Pick color for {key}")
+            if result[1]:
+                self.color_vars[key].set(result[1])
+                self.oil_colors[key] = result[1]
+                OIL_COLORS[key] = result[1]
+                save_colors(self.oil_colors)
+                self.color_buttons[key].config(bg=result[1])
+                self.log(f"Color saved: {key} = {result[1]}")
+
+        def generate_reports(self):
+            csv_path = Path(self.csv_path.get())
+            if not csv_path.exists():
+                messagebox.showerror("Error", f"CSV file not found:\n{csv_path}")
+                return
+
+            start = self.start_cal.get() or None
+            end = self.end_cal.get() or None
+
+            self.log(f"Loading: {csv_path.name}")
+            try:
+                df = load_and_sort_data(csv_path, start_date=start, end_date=end)
+            except Exception as e:
+                self.log(f"ERROR loading data: {e}")
+                messagebox.showerror("Error", str(e))
+                return
+
+            if df.empty:
+                self.log("No data found in the selected date range.")
+                messagebox.showwarning("No Data", "No data found for the selected criteria.")
+                return
+
+            machine_groups = get_machine_groups(df)
+            self.log(f"Found {len(machine_groups)} fleet(s)")
+
+            all_timestamps = pd.concat([group["Timestamp"] for group in machine_groups.values()])
+            min_date = all_timestamps.min()
+            max_date = all_timestamps.max()
+            min_str = min_date.strftime("%Y-%m-%d %H:%M")
+            max_str = max_date.strftime("%Y-%m-%d %H:%M")
+            start_str = self.start_cal.get() or min_date.strftime("%Y-%m-%d")
+            end_str = self.end_cal.get() or max_date.strftime("%Y-%m-%d")
+            days_diff = (max_date - min_date).days
+
+            self.log("Generating pie charts...")
+            for fleet_number in sorted(machine_groups.keys()):
+                generate_pie_chart(machine_groups[fleet_number], fleet_number)
+                self.log(f"  Chart: {fleet_number}")
+
+            self.log("Generating PDF report...")
+            csv_stem = csv_path.stem
+            pdf_name = f"{csv_stem}_{days_diff}Days_{end_str}.pdf"
+            pdf_path = REPORTS_DIR / pdf_name
+            export_to_pdf(machine_groups, pdf_path, min_date=min_str, max_date=max_str)
+            self.log(f"  PDF saved: {pdf_path}")
+            self.log(f"  Output folder: {REPORTS_DIR}")
+
+            self.log("Done!")
+            messagebox.showinfo("Success", f"Report generated!\n\n{pdf_name}\n\nSaved to:\n{REPORTS_DIR}")
+
+        def open_output_folder(self):
+            import subprocess
+            folder = str(REPORTS_DIR)
+            subprocess.Popen(f'explorer "{folder}"')
+
+    root = tk.Tk()
+    app = MachineFillGUI(root)
+    root.mainloop()
