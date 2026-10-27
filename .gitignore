@@ -1,5 +1,15 @@
 .kilo
 .venv
+.claude/
 *.jpg
 *.png
 *.csv
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# PyInstaller build output (keep the dist README)
+MachineFill-Reporter/build/
+MachineFill-Reporter/dist/*
+!MachineFill-Reporter/dist/README.txt
