@@ -6,7 +6,8 @@ from typing import Dict, Optional
 import sys
 import json
 import tempfile
-from datetime import date, timedelta
+import io
+from datetime import date, timedelta, datetime
 
 def get_base_path() -> Path:
     if getattr(sys, 'frozen', False):
@@ -87,9 +88,39 @@ def parse_liters(value) -> float:
     return float(value)
 
 
+DEFAULT_HEADERS = ["Timestamp", "Oil Type", "Liters", "FleetNumber", "Attendant", "Coynumber"]
+HEADER_TOKENS = {"TimeStamp", "Fluid_Transaction", "Liters_Dispensed", "Name", "COY Number"}
+
+def _clean_csv_bytes(filepath: Path) -> str:
+    try:
+        data = filepath.read_bytes()
+    except OSError as e:
+        raise IOError(f"Could not read file: {filepath}") from e
+    return data.replace(b"\x00", b"").decode("utf-8", errors="ignore")
+
+def _has_header(filepath: Path) -> bool:
+    try:
+        first_line = _clean_csv_bytes(filepath).splitlines()[0]
+    except (OSError, IndexError):
+        return False
+    cells = {c.strip() for c in first_line.split(",")}
+    return bool(cells & HEADER_TOKENS)
+
+def _read_timestamps(filepath: Path) -> pd.Series:
+    cleaned = _clean_csv_bytes(filepath)
+    header = 0 if _has_header(filepath) else None
+    names = DEFAULT_HEADERS if header is None else None
+    df = pd.read_csv(io.StringIO(cleaned), header=header, names=names)
+    ts_col = "Timestamp" if "Timestamp" in df.columns else "TimeStamp"
+    return pd.to_datetime(df[ts_col])
+
 def load_and_sort_data(filepath: Path = DATA_PATH, start_date: Optional[str] = START_DATE, end_date: Optional[str] = END_DATE) -> pd.DataFrame:
-    df = pd.read_csv(filepath)
-    
+    cleaned = _clean_csv_bytes(filepath)
+    if _has_header(filepath):
+        df = pd.read_csv(io.StringIO(cleaned))
+    else:
+        df = pd.read_csv(io.StringIO(cleaned), header=None, names=DEFAULT_HEADERS)
+
     df = df.rename(columns={
         "TimeStamp": "Timestamp",
         "Fluid_Transaction": "Oil Type",
@@ -115,12 +146,22 @@ def load_and_sort_data(filepath: Path = DATA_PATH, start_date: Optional[str] = S
         df = df[df["Timestamp"] <= end_date]
     
     df = df.sort_values(by=["FleetNumber", "Timestamp"], ascending=[True, True]).reset_index(drop=True)
-    
+
+    df.attrs["source_filename"] = Path(filepath).name
+
     return df
 
 
 def get_machine_groups(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     return {fleet: group for fleet, group in df.groupby("FleetNumber", sort=False)}
+
+
+def _get_csv_filename(machine_groups: Dict[str, pd.DataFrame]) -> str:
+    for group in machine_groups.values():
+        name = group.attrs.get("source_filename")
+        if name:
+            return name
+    return DATA_PATH.name
 
 
 def print_transaction_summary(df: pd.DataFrame) -> None:
@@ -174,8 +215,8 @@ def generate_pie_chart(machine_df: pd.DataFrame, fleet_number: str, output_dir: 
 
 def generate_html_report(machine_groups: Dict[str, pd.DataFrame], output_dir: Path = REPORTS_DIR, min_date: Optional[str] = None, max_date: Optional[str] = None) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    csv_filename = DATA_PATH.name
+
+    csv_filename = _get_csv_filename(machine_groups)
     
     sections = []
     
@@ -253,6 +294,7 @@ def generate_html_report(machine_groups: Dict[str, pd.DataFrame], output_dir: Pa
 
 
 def export_to_pdf(machine_groups: Dict[str, pd.DataFrame], output_path: Path, min_date: Optional[str] = None, max_date: Optional[str] = None) -> Path:
+    csv_filename = _get_csv_filename(machine_groups)
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
@@ -277,7 +319,7 @@ def export_to_pdf(machine_groups: Dict[str, pd.DataFrame], output_path: Path, mi
                         ax_logo.imshow(img)
                         ax_logo.axis('off')
                     #Argument list [left, bottom] All values are fractions of the Figure size (range 0.0 to 1.0)
-                    fig.text(0.35, 0.95, f"{DATA_PATH.name} Report", ha='left', va='top', fontsize=16, fontweight='bold', color='white')
+                    fig.text(0.35, 0.95, f"{csv_filename} Report", ha='left', va='top', fontsize=16, fontweight='bold', color='white')
                     fig.text(0.35, 0.91, f"Date Range: {min_date} to {max_date}", ha='left', va='top', fontsize=10, color='white')
                 
                 plt.figtext(0.5, 0.84 if page_idx == 0 else 0.94, f"Summarised oil consumption for FleetNumber : {fleet_number}", ha='center', fontsize=14, fontweight='bold')
@@ -346,6 +388,10 @@ if __name__ == "__main__":
             self.root.geometry("560x540")
             self.root.resizable(False, False)
 
+            icon_path = BASE_PATH / "assets" / "app.ico"
+            if icon_path.exists():
+                self.root.iconbitmap(str(icon_path))
+
             self.csv_path = tk.StringVar(value=str(OUTPUT_PATH))
             self.logo_path = tk.StringVar(value="")
             self.status_text = tk.StringVar(value="Ready")
@@ -408,18 +454,76 @@ if __name__ == "__main__":
             ttk.Button(action_frame, text="Generate Report", command=self.generate_reports).pack(side="left", padx=(10, 6))
             ttk.Button(action_frame, text="Open Output Folder", command=self.open_output_folder).pack(side="left", padx=6)
 
+            self.status_lines: list[str] = []
+            self.session_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             status_frame = ttk.LabelFrame(self.root, text="Status")
             status_frame.pack(fill="both", expand=True, **pad)
 
-            self.status_display = tk.Text(status_frame, height=8, width=62, state="disabled", wrap="word")
-            self.status_display.pack(padx=4, pady=4)
+            self.status_display = tk.Text(status_frame, height=12, width=70, state="disabled", wrap="word", font=("Consolas", 9))
+            self.status_display.pack(padx=4, pady=4, fill="both", expand=True)
+
+            btn_frame = ttk.Frame(status_frame)
+            btn_frame.pack(pady=(0, 4))
+            ttk.Button(btn_frame, text="Copy Status Report", command=self.copy_status_report).pack(side="left", padx=4)
+            ttk.Button(btn_frame, text="Save Status Report", command=self.save_status_report).pack(side="left", padx=4)
+
+            self._write_header()
+
+        def _write_header(self):
+            self.log("=" * 60)
+            self.log("MACHINEFILL REPORTER — STATUS REPORT")
+            self.log("=" * 60)
+            self.log(f"Session started : {self.session_start}")
+            self.log(f"App version     : MachineFillReporter v0.4")
+            self.log(f"Output folder   : {REPORTS_DIR}")
+            self.log(f"Settings file   : {SETTINGS_FILE}")
+            self.log("-" * 60)
+
+        def copy_status_report(self):
+            report = "\n".join(self.status_lines)
+            self.root.clipboard_clear()
+            self.root.clipboard_append(report)
+            messagebox.showinfo("Copied", "Status report copied to clipboard.\n\nPaste it into an email and send it to your developer.")
+
+        def save_status_report(self):
+            report = "\n".join(self.status_lines)
+            default_name = f"MachineFill_Status_{self.session_start.replace(':', '-').replace(' ', '_')}.txt"
+            save_path = filedialog.asksaveasfilename(
+                initialdir=str(OUTPUT_PATH),
+                initialfile=default_name,
+                defaultextension=".txt",
+                filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+                title="Save Status Report",
+            )
+            if not save_path:
+                return
+            try:
+                Path(save_path).write_text(report, encoding="utf-8")
+                self._log_result("Status report saved", True, str(save_path))
+                messagebox.showinfo("Saved", f"Status report saved to:\n\n{save_path}")
+            except Exception as e:
+                self._log_result("Status report saved", False, str(e))
+                messagebox.showerror("Error", f"Could not save status report:\n{e}")
 
         def log(self, message):
+            self.status_lines.append(message)
             self.status_display.config(state="normal")
             self.status_display.insert("end", message + "\n")
             self.status_display.see("end")
             self.status_display.config(state="disabled")
             self.root.update_idletasks()
+
+        def _log_result(self, step: str, success: bool, detail: str = ""):
+            tag = "[OK]" if success else "[FAIL]"
+            line = f"  {tag} {step}"
+            if detail:
+                line += f" — {detail}"
+            self.log(line)
+
+        def _section(self, title):
+            self.log("")
+            self.log(f"[ {title} ]")
 
         def browse_csv(self):
             path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
@@ -428,17 +532,20 @@ if __name__ == "__main__":
                 self._detect_csv_dates(path)
 
         def _detect_csv_dates(self, path):
+            self._section("CSV Date Auto-Detection")
+            self.log(f"  File: {path}")
             try:
-                df = pd.read_csv(path, usecols=["TimeStamp"])
-                df["TimeStamp"] = pd.to_datetime(df["TimeStamp"])
-                if not df.empty:
-                    min_ts = df["TimeStamp"].min()
-                    max_ts = df["TimeStamp"].max()
+                timestamps = _read_timestamps(Path(path))
+                if not timestamps.empty:
+                    min_ts = timestamps.min()
+                    max_ts = timestamps.max()
                     self.start_cal.set_date(min_ts)
                     self.end_cal.set_date(max_ts)
-                    self.log(f"CSV date range: {min_ts.strftime('%Y-%m-%d')} to {max_ts.strftime('%Y-%m-%d')}")
+                    self._log_result("Date range detected", True, f"{min_ts.strftime('%Y-%m-%d')} to {max_ts.strftime('%Y-%m-%d')} ({len(timestamps)} transactions)")
+                else:
+                    self._log_result("Date range detected", False, "No timestamp values found in file")
             except Exception as e:
-                self.log(f"Could not detect CSV dates: {e}")
+                self._log_result("Date range detected", False, str(e))
 
         def browse_logo(self):
             path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")])
